@@ -1,71 +1,76 @@
-name: "Build VST2 (Windows 64-bit)"  
-  
-on:  
-  workflow_dispatch:  
-  push:  
-    branches:  
-      - main  
-  
-defaults:  
-  run:  
-    shell: bash  
-  
-jobs:  
-  build_vst2:  
-    name: "Windows 64-bit VST2 DLL"  
-    runs-on: windows-latest  
-  
-    steps:  
-      - name: "Checkout code"  
-        uses: actions/checkout@v4  
-        with:  
-          submodules: recursive  
-  
-      - name: "Extract VST2 SDK"  
-        shell: pwsh  
-        run: |  
-          Expand-Archive -Path "vstsdk2.4.zip" -DestinationPath "vst2sdk" -Force  
-  
-      - name: "Verify VST2 SDK structure"  
-        run: |  
-          ls vst2sdk/pluginterfaces/vst2.x/  
-  
-      - name: "Prepare for JUCE"  
-        uses: surge-synthesizer/sst-githubactions/prepare-for-juce@main  
-        with:  
-          os: ${{ runner.os }}  
-  
-      - name: "Configure CMake"  
-        run: |  
-          cmake -S . -B ./build \  
-            -G "Visual Studio 17 2022" \  
-            -A x64 \  
-            -DCMAKE_BUILD_TYPE=Release \  
-            -DSURGE_SKIP_STANDALONE=TRUE \  
-            -DSURGE_SKIP_VST3=TRUE \  
-            -DSURGE_BUILD_CLAP=FALSE \  
-            -DSURGE_BUILD_TESTRUNNER=FALSE \  
-            -DSURGE_BUILD_FX=FALSE  
-        env:  
-          VST2SDK_DIR: ${{ github.workspace }}/vst2sdk  
-  
-      - name: "Build surge-xt VST2"  
-        run: |  
-          cmake --build ./build \  
-            --config Release \  
-            --target surge-xt_VST \  
-            --parallel 3  
-        env:  
-          VST2SDK_DIR: ${{ github.workspace }}/vst2sdk  
-  
-      - name: "Locate output DLL"  
-        run: |  
-          find ./build -name "*.dll" | grep -i "vst\|surge"  
-  
-      - name: "Upload VST2 DLL artifact"  
-        uses: actions/upload-artifact@v4  
-        with:  
-          name: surge-xt-vst2-win64  
-          path: |  
-            build/surge-xt_artefacts/Release/VST/*.dll  
+name: "Build VST2 (Windows 64-bit)"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build_vst2:
+    name: "Windows 64-bit VST2 DLL"
+    runs-on: windows-latest
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+          # 显式转换换行符，防止子模块检出时携带不一致的换行规范
+      - name: Configure git line endings
+        run: git config --global core.autocrlf input
+
+      - name: "Extract VST2 SDK"
+        shell: pwsh
+        run: |
+          Expand-Archive -Path "cstsdk2.4.zip" -DestinationPath "vst2sdk" -Force
+
+      - name: "Verify VST2 SDK structure"
+        run: |
+          ls vst2sdk/pluginterfaces/vst2.x/
+
+      - name: "Prepare for JUCE"
+        uses: surge-synthesizer/sst-githubactions/prepare-for-juce@main
+        with:
+          os: ${{ runner.os }}
+
+      - name: "Configure CMake"
+        # 使用 > 符号将多行文本自动合并为单行，去除了所有容易引发断行的反斜杠
+        run: >
+          cmake -S . -B ./build
+          -G "Visual Studio 17 2022"
+          -A x64
+          -DCMAKE_BUILD_TYPE=Release
+          -DSURGE_SKIP_STANDALONE=TRUE
+          -DSURGE_SKIP_VST3=TRUE
+          -DSURGE_BUILD_CLAP=FALSE
+          -DSURGE_BUILD_TESTRUNNER=FALSE
+          -DSURGE_BUILD_FX=FALSE
+        env:
+          VST2SDK_DIR: ${{ github.workspace }}/vst2sdk
+
+      - name: "Build surge-xt VST2"
+        # 同样使用 > 符号安全合并编译命令
+        run: >
+          cmake --build ./build
+          --config Release
+          --target surge-xt_VST
+          --parallel 3
+        env:
+          VST2SDK_DIR: ${{ github.workspace }}/vst2sdk
+
+      - name: "Locate output DLL"
+        run: |
+          find ./build -name "*.dll" | grep -i "vst\|surge"
+
+      - name: "Upload VST2 DLL artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: surge-xt-vst2-win64
+          path: |
+            build/surge-xt_artefacts/Release/VST/*.dll
           if-no-files-found: error
