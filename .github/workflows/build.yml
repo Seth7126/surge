@@ -24,7 +24,7 @@ jobs:
       - name: "Extract VST2 SDK"  
         shell: pwsh  
         run: |  
-          Expand-Archive -Path "cstsdk2.4.zip" -DestinationPath "vst2sdk" -Force  
+          Expand-Archive -Path "vstsdk2.4.zip" -DestinationPath "vst2sdk" -Force  
   
       - name: "Verify VST2 SDK structure"  
         run: |  
