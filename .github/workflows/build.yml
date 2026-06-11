@@ -65,34 +65,9 @@ jobs:
           --target surge-xt_VST
           --parallel 3
 
-      - name: "Discover VST2 DLL path"
-        id: locate
-        shell: pwsh
-        run: |
-          Write-Host "=== All DLLs in build tree ==="
-          Get-ChildItem -Path ./build -Recurse -Filter "*.dll" | ForEach-Object {
-            Write-Host $_.FullName
-          }
-          Write-Host ""
-          Write-Host "=== All surge-xt DLLs ==="
-          $dlls = Get-ChildItem -Path ./build -Recurse -Filter "*.dll" |
-                  Where-Object { $_.Name -like "surge-xt*" }
-          foreach ($dll in $dlls) {
-            Write-Host "Found: $($dll.FullName)"
-          }
-          if ($dlls.Count -eq 0) {
-            Write-Error "No surge-xt DLL found in build tree!"
-            exit 1
-          }
-          $targetDll = $dlls[0]
-          $dllDir = $targetDll.DirectoryName
-          Write-Host ""
-          Write-Host "Upload directory: $dllDir"
-          echo "dll_dir=$dllDir" >> $env:GITHUB_OUTPUT
-
       - name: "Upload VST2 DLL artifact"
         uses: actions/upload-artifact@v4
         with:
           name: surge-xt-vst2-win64
-          path: ${{ steps.locate.outputs.dll_dir }}/*.dll
+          path: "build/src/surge-xt/surge-xt_artefacts/Release/VST/Surge XT.dll"
           if-no-files-found: error
