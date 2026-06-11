@@ -53,7 +53,7 @@ jobs:
           -DSURGE_SKIP_VST3=TRUE
           -DSURGE_BUILD_CLAP=FALSE
           -DSURGE_BUILD_TESTRUNNER=FALSE
-          -DSURGE_BUILD_FX=FALSE
+          -Wno-dev
         env:
           VST2SDK_DIR: ${{ github.workspace }}\vst2sdk
 
